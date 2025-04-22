@@ -1,0 +1,21 @@
+{
+  "name": "hono-downloader",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.js",
+    "dev": "bun run --hot index.ts",
+    "build": "bun build index.ts --target=bun --outfile=server.js"
+  },
+  "dependencies": {
+    "hono": "^4.7.7",
+    "node-cache": "^5.1.2",
+    "winston": "^3.17.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
