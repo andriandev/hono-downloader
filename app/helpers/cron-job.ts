@@ -26,7 +26,7 @@ export function startCronJob() {
 
         if (age > FILE_EXPIRED) {
           fs.unlinkSync(filePath);
-          logger.info(`Deleted ${filePath}`);
+          logger.warn(`Deleted ${filePath}`);
         }
       } catch (err) {
         logger.error(`Failed to delete ${filePath}`, err?.message);
