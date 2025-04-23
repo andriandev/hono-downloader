@@ -3,7 +3,7 @@ import path from 'path';
 import { cache } from '@app/config/cache';
 import { AUDIO_DIR, VIDEO_DIR } from '@app/config/setting';
 import { logger } from '@app/config/logging';
-import { APP_NODE, YTDLP_PATH } from '@app/config/setting';
+import { APP_NODE, YTDLP_PATH, FFMPEG_PATH } from '@app/config/setting';
 
 export function startQueue() {
   function processVideoQueue() {
@@ -36,6 +36,8 @@ export function startQueue() {
         selectedFormat,
         '--merge-output-format',
         data.format,
+        '--ffmpeg-location',
+        FFMPEG_PATH,
         '-o',
         filepath,
         data.url,
@@ -83,6 +85,8 @@ export function startQueue() {
         data.quality,
         '--audio-format',
         data.format,
+        '--ffmpeg-location',
+        FFMPEG_PATH,
         '-o',
         filepath,
         data.url,

@@ -6,4 +6,7 @@ export const VIDEO_DIR = './public/video';
 export const JOB_INTERVAL =
   +process.env.APP_JOB_INTERVAL || 2 * 24 * 60 * 60 * 1000; // 2 days
 export const FILE_EXPIRED = +process.env.APP_FILE_EXPIRED || 6 * 60 * 60 * 1000; // 6 hours
-export const YTDLP_PATH = process.env.APP_YTDLP_PATH || 'ytdlp';
+export const YTDLP_PATH =
+  process.env.APP_YTDLP_PATH || 'D:\\Data\\App\\yt-dlp\\yt-dlp.exe';
+export const FFMPEG_PATH =
+  process.env.APP_FFMPEG_PATH || 'D:\\Data\\App\\ffmpeg\\bin';

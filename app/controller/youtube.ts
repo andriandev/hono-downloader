@@ -15,6 +15,7 @@ import {
   VIDEO_DIR,
   BASE_URL,
   YTDLP_PATH,
+  FFMPEG_PATH,
 } from '@app/config/setting';
 import { cache } from '@app/config/cache';
 
@@ -122,6 +123,8 @@ export async function DownloadVideo(c: Context) {
     selectedFormat,
     '--merge-output-format',
     format,
+    '--ffmpeg-location',
+    FFMPEG_PATH,
     '-o',
     filepath,
     url,
@@ -196,6 +199,8 @@ export async function DownloadAudio(c: Context) {
     quality,
     '--audio-format',
     format,
+    '--ffmpeg-location',
+    FFMPEG_PATH,
     '-o',
     filepath,
     url,
