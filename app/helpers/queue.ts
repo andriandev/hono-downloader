@@ -3,7 +3,7 @@ import path from 'path';
 import { cache } from '@app/config/cache';
 import { AUDIO_DIR, VIDEO_DIR } from '@app/config/setting';
 import { logger } from '@app/config/logging';
-import { APP_NODE } from '@app/config/setting';
+import { APP_NODE, YTDLP_PATH } from '@app/config/setting';
 
 export function startQueue() {
   function processVideoQueue() {
@@ -31,7 +31,7 @@ export function startQueue() {
       const selectedFormat = formatMap[data.quality];
 
       const args = [
-        'yt-dlp',
+        YTDLP_PATH,
         '-f',
         selectedFormat,
         '--merge-output-format',
@@ -77,7 +77,7 @@ export function startQueue() {
       const data: Record<string, string> = cache.get(key);
 
       const args = [
-        'yt-dlp',
+        YTDLP_PATH,
         '-x',
         '--audio-quality',
         data.quality,

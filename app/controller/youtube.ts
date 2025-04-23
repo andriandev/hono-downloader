@@ -10,7 +10,12 @@ import type {
   AudioTypes,
   VideoTypes,
 } from '@app/validation/youtube';
-import { AUDIO_DIR, VIDEO_DIR, BASE_URL } from '@app/config/setting';
+import {
+  AUDIO_DIR,
+  VIDEO_DIR,
+  BASE_URL,
+  YTDLP_PATH,
+} from '@app/config/setting';
 import { cache } from '@app/config/cache';
 
 export async function InfoVideo(c: Context) {
@@ -20,7 +25,7 @@ export async function InfoVideo(c: Context) {
 
   const request: InfoTypes = YoutubeValidation.INFO.parse(query);
 
-  const proc = Bun.spawnSync(['yt-dlp', '--dump-json', request.url], {
+  const proc = Bun.spawnSync([YTDLP_PATH, '--dump-json', request.url], {
     stdout: 'pipe',
     stderr: 'pipe',
   });
@@ -112,7 +117,7 @@ export async function DownloadVideo(c: Context) {
   }
 
   const args = [
-    'yt-dlp',
+    YTDLP_PATH,
     '-f',
     selectedFormat,
     '--merge-output-format',
@@ -185,7 +190,7 @@ export async function DownloadAudio(c: Context) {
   }
 
   const args = [
-    'yt-dlp',
+    YTDLP_PATH,
     '-x',
     '--audio-quality',
     quality,
