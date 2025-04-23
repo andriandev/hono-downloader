@@ -1,6 +1,7 @@
 export const APP_NODE = process.env.APP_ENV || 'development';
 export const APP_TIMEOUT = +process.env.APP_TIMEOUT || 60; // 60 seconds
 export const BASE_URL = process.env.APP_BASE_URL || 'http://localhost:3001';
+export const STORAGE_URL = process.env.APP_STORAGE_URL || '';
 export const AUDIO_DIR = './public/audio';
 export const VIDEO_DIR = './public/video';
 export const JOB_INTERVAL =

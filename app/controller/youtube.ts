@@ -13,7 +13,7 @@ import type {
 import {
   AUDIO_DIR,
   VIDEO_DIR,
-  BASE_URL,
+  STORAGE_URL,
   YTDLP_PATH,
   FFMPEG_PATH,
 } from '@app/config/setting';
@@ -111,7 +111,7 @@ export async function DownloadVideo(c: Context) {
         size,
         quality,
         format,
-        link: `${BASE_URL}/video/${filename}`,
+        link: `${STORAGE_URL}/video/${filename}`,
       },
     });
 
@@ -153,7 +153,7 @@ export async function DownloadVideo(c: Context) {
       size,
       quality,
       format,
-      link: `${BASE_URL}/video/${filename}`,
+      link: `${STORAGE_URL}/video/${filename}`,
     },
   });
 
@@ -189,7 +189,7 @@ export async function DownloadAudio(c: Context) {
         size,
         quality: sizeAudio[quality],
         format,
-        link: `${BASE_URL}/audio/${filename}`,
+        link: `${STORAGE_URL}/audio/${filename}`,
       },
     });
 
@@ -232,7 +232,7 @@ export async function DownloadAudio(c: Context) {
       size,
       quality: sizeAudio[quality],
       format,
-      link: `${BASE_URL}/audio/${filename}`,
+      link: `${STORAGE_URL}/audio/${filename}`,
     },
   });
 
@@ -260,7 +260,7 @@ export async function DownloadVideoQueue(c: Context) {
         size,
         quality,
         format,
-        link: `${BASE_URL}/video/${filename}`,
+        link: `${STORAGE_URL}/video/${filename}`,
       },
     });
 
@@ -316,7 +316,7 @@ export async function DownloadAudioQueue(c: Context) {
         size,
         quality: sizeAudio[quality],
         format,
-        link: `${BASE_URL}/audio/${filename}`,
+        link: `${STORAGE_URL}/audio/${filename}`,
       },
     });
 
