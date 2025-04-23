@@ -7,6 +7,7 @@ const urlYoutube = z
   .url('URL is not valid')
   .refine(
     (val) =>
+      val.includes('://m.youtube.com/') ||
       val.includes('://www.youtube.com/') ||
       val.includes('://youtube.com/') ||
       val.includes('://youtu.be/'),
