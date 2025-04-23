@@ -7,11 +7,10 @@ import {
   FILE_EXPIRED,
 } from '@app/config/setting';
 import { logger } from '@app/config/logging';
-import { APP_NODE } from '@app/config/setting';
 
 export function startCronJob() {
   const deleteOldFiles = (dir: string) => {
-    APP_NODE !== 'production' ? logger.info(`Job running...`) : '';
+    console.log('Cron Job running...');
     if (!fs.existsSync(dir)) return;
 
     const files = fs.readdirSync(dir);
@@ -26,7 +25,7 @@ export function startCronJob() {
 
         if (age > FILE_EXPIRED) {
           fs.unlinkSync(filePath);
-          logger.warn(`Deleted ${filePath}`);
+          console.log(`Deleted ${filePath}`);
         }
       } catch (err) {
         logger.error(`Failed to delete ${filePath}`, err?.message);

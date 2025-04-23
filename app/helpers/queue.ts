@@ -50,7 +50,7 @@ export function startQueue() {
 
       proc.exited.then(async (exit) => {
         if (exit === 0) {
-          logger.warn(`Queue video ${key} success.`);
+          console.log(`Queue video ${key} success.`);
           cache.del(key);
         } else {
           const stderr = await new Response(proc.stderr).text();
@@ -104,7 +104,7 @@ export function startQueue() {
 
       proc.exited.then(async (exit) => {
         if (exit === 0) {
-          logger.warn(`Queue audio ${key} success.`);
+          console.log(`Queue audio ${key} success.`);
           cache.del(key);
         } else {
           const stderr = await new Response(proc.stderr).text();
