@@ -65,7 +65,7 @@ describe('GET /yt/video', () => {
 describe('GET /yt/audio', () => {
   it('should return audio download link and data for valid YouTube URL and format', async () => {
     const res = await app.request(
-      `/yt/audio?url=${YT_URL}&quality=0&format=mp3`
+      `/yt/audio?url=${YT_URL}&quality=5&format=mp3`
     );
 
     const data = await res.json();
