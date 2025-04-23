@@ -12,8 +12,11 @@ import { FlushCache } from '@app/controller/cache';
 const app = new Hono();
 
 app.use('/favicon.ico', serveStatic({ path: './favicon.ico' }));
-app.use('/audio/*', serveStatic({ root: './public' }));
-app.use('/video/*', serveStatic({ root: './public' }));
+
+if (process.env.APP_SERVER_STATIC == 'enable') {
+  app.use('/audio/*', serveStatic({ root: './public' }));
+  app.use('/video/*', serveStatic({ root: './public' }));
+}
 
 app.get('/cache/flush', FlushCache);
 
