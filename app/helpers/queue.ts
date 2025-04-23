@@ -43,13 +43,18 @@ export function startQueue() {
         data.url,
       ];
 
-      const proc = Bun.spawn(args);
+      const proc = Bun.spawn(args, {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      });
 
-      proc.exited.then((exit) => {
+      proc.exited.then(async (exit) => {
         if (exit === 0) {
           logger.info(`Queue video ${key} success.`);
           cache.del(key);
         } else {
+          const stderr = await new Response(proc.stderr).text();
+          logger.error(stderr);
           logger.error(`Queue video ${key} failed.`);
         }
       });
@@ -92,13 +97,18 @@ export function startQueue() {
         data.url,
       ];
 
-      const proc = Bun.spawn(args);
+      const proc = Bun.spawn(args, {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      });
 
-      proc.exited.then((exit) => {
+      proc.exited.then(async (exit) => {
         if (exit === 0) {
           logger.info(`Queue audio ${key} success.`);
           cache.del(key);
         } else {
+          const stderr = await new Response(proc.stderr).text();
+          logger.error(stderr);
           logger.error(`Queue audio ${key} failed.`);
         }
       });

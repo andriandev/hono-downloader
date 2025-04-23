@@ -18,6 +18,7 @@ import {
   FFMPEG_PATH,
 } from '@app/config/setting';
 import { cache } from '@app/config/cache';
+import { logger } from '@app/config/logging';
 
 export async function InfoVideo(c: Context) {
   const query: InfoTypes = {
@@ -137,8 +138,11 @@ export async function DownloadVideo(c: Context) {
 
   const exit = await proc.exited;
   if (exit !== 0) {
+    const stderr = await new Response(proc.stderr).text();
+    logger.error(stderr);
+
     throw new HTTPException(400, {
-      message: `Download failed with code ${exit}`,
+      message: `Download failed with code ${exit}, ${stderr}`,
     });
   }
 
@@ -213,8 +217,11 @@ export async function DownloadAudio(c: Context) {
 
   const exit = await proc.exited;
   if (exit !== 0) {
+    const stderr = await new Response(proc.stderr).text();
+    logger.error(stderr);
+
     throw new HTTPException(400, {
-      message: `Download failed with code ${exit}`,
+      message: `Download failed with code ${exit}, ${stderr}`,
     });
   }
 
