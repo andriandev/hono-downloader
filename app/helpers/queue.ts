@@ -56,6 +56,7 @@ export function startQueue() {
           const stderr = await new Response(proc.stderr).text();
           logger.error(stderr);
           logger.error(`Queue video ${key} failed.`);
+          cache.del(key);
         }
       });
     }
@@ -110,6 +111,7 @@ export function startQueue() {
           const stderr = await new Response(proc.stderr).text();
           logger.error(stderr);
           logger.error(`Queue audio ${key} failed.`);
+          cache.del(key);
         }
       });
     }

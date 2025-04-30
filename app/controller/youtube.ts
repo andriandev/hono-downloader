@@ -4,7 +4,12 @@ import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { YoutubeValidation } from '@app/validation/youtube';
-import { resJSON, getYouTubeID } from '@app/helpers/function';
+import {
+  resJSON,
+  getYouTubeID,
+  checkVideo,
+  formatSize,
+} from '@app/helpers/function';
 import type {
   InfoTypes,
   AudioTypes,
@@ -26,6 +31,14 @@ export async function InfoVideo(c: Context) {
   };
 
   const request: InfoTypes = YoutubeValidation.INFO.parse(query);
+
+  const isAvailable = await checkVideo(request?.url);
+
+  if (!isAvailable) {
+    throw new HTTPException(400, {
+      message: 'Video not available',
+    });
+  }
 
   const proc = Bun.spawnSync([YTDLP_PATH, '--dump-json', request.url], {
     stdout: 'pipe',
@@ -83,6 +96,14 @@ export async function DownloadVideo(c: Context) {
   const query = c.req.query();
   const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
 
+  const isAvailable = await checkVideo(request?.url);
+
+  if (!isAvailable) {
+    throw new HTTPException(400, {
+      message: 'Video not available',
+    });
+  }
+
   if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
 
   const { url, quality, format } = request;
@@ -98,17 +119,17 @@ export async function DownloadVideo(c: Context) {
 
   const ytID = getYouTubeID(url) || url;
   const hash = createHash('md5')
-    .update(`video-${ytID}-${quality}-${format}`)
+    .update(`yt-video-${ytID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
 
   if (fs.existsSync(filepath)) {
-    const size = fs.statSync(filepath).size;
+    const size: number = fs.statSync(filepath).size;
 
     const resData = resJSON({
       data: {
-        size,
+        size: formatSize(size),
         quality,
         format,
         link: `${STORAGE_URL}/video/${filename}`,
@@ -146,11 +167,11 @@ export async function DownloadVideo(c: Context) {
     });
   }
 
-  const size = fs.statSync(filepath).size;
+  const size: number = fs.statSync(filepath).size;
 
   const resData = resJSON({
     data: {
-      size,
+      size: formatSize(size),
       quality,
       format,
       link: `${STORAGE_URL}/video/${filename}`,
@@ -164,13 +185,21 @@ export async function DownloadAudio(c: Context) {
   const query = c.req.query();
   const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
 
+  const isAvailable = await checkVideo(request?.url);
+
+  if (!isAvailable) {
+    throw new HTTPException(400, {
+      message: 'Video not available',
+    });
+  }
+
   if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
   const { url, quality, format } = request;
 
   const ytID = getYouTubeID(url) || url;
   const hash = createHash('md5')
-    .update(`audio-${ytID}-${quality}-${format}`)
+    .update(`yt-audio-${ytID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -182,11 +211,11 @@ export async function DownloadAudio(c: Context) {
   };
 
   if (fs.existsSync(filepath)) {
-    const size = fs.statSync(filepath).size;
+    const size: number = fs.statSync(filepath).size;
 
     const resData = resJSON({
       data: {
-        size,
+        size: formatSize(size),
         quality: sizeAudio[quality],
         format,
         link: `${STORAGE_URL}/audio/${filename}`,
@@ -225,11 +254,11 @@ export async function DownloadAudio(c: Context) {
     });
   }
 
-  const size = fs.statSync(filepath).size;
+  const size: number = fs.statSync(filepath).size;
 
   const resData = resJSON({
     data: {
-      size,
+      size: formatSize(size),
       quality: sizeAudio[quality],
       format,
       link: `${STORAGE_URL}/audio/${filename}`,
@@ -243,21 +272,29 @@ export async function DownloadVideoQueue(c: Context) {
   const query = c.req.query();
   const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
 
+  const isAvailable = await checkVideo(request?.url);
+
+  if (!isAvailable) {
+    throw new HTTPException(400, {
+      message: 'Video not available',
+    });
+  }
+
   const { url, quality, format } = request;
 
   const ytID = getYouTubeID(url) || url;
   const hash = createHash('md5')
-    .update(`video-${ytID}-${quality}-${format}`)
+    .update(`yt-video-${ytID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
 
   if (fs.existsSync(filepath)) {
-    const size = fs.statSync(filepath).size;
+    const size: number = fs.statSync(filepath).size;
 
     const resData = resJSON({
       data: {
-        size,
+        size: formatSize(size),
         quality,
         format,
         link: `${STORAGE_URL}/video/${filename}`,
@@ -271,7 +308,7 @@ export async function DownloadVideoQueue(c: Context) {
     cache.set(
       filename,
       {
-        url: url,
+        url,
         quality,
         format,
       },
@@ -291,13 +328,21 @@ export async function DownloadAudioQueue(c: Context) {
   const query = c.req.query();
   const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
 
+  const isAvailable = await checkVideo(request?.url);
+
+  if (!isAvailable) {
+    throw new HTTPException(400, {
+      message: 'Video not available',
+    });
+  }
+
   if (!fs.existsSync(AUDIO_DIR)) fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
   const { url, quality, format } = request;
 
   const ytID = getYouTubeID(url) || url;
   const hash = createHash('md5')
-    .update(`audio-${ytID}-${quality}-${format}`)
+    .update(`yt-audio-${ytID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -309,11 +354,11 @@ export async function DownloadAudioQueue(c: Context) {
   };
 
   if (fs.existsSync(filepath)) {
-    const size = fs.statSync(filepath).size;
+    const size: number = fs.statSync(filepath).size;
 
     const resData = resJSON({
       data: {
-        size,
+        size: formatSize(size),
         quality: sizeAudio[quality],
         format,
         link: `${STORAGE_URL}/audio/${filename}`,
@@ -327,7 +372,7 @@ export async function DownloadAudioQueue(c: Context) {
     cache.set(
       filename,
       {
-        url: url,
+        url,
         quality,
         format,
       },

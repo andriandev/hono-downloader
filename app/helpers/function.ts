@@ -30,3 +30,28 @@ export function getYouTubeID(url: string) {
   const match = url.match(regex);
   return match ? match[1] : null;
 }
+
+export async function checkVideo(url: string) {
+  try {
+    const api = `https://www.youtube.com/oembed?url=${encodeURIComponent(
+      url
+    )}&format=json`;
+    const res = await fetch(api);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return {
+      title: data.title,
+      thumbnail_url: data.thumbnail_url,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+  return `${(bytes / 1024).toFixed(0)} KB`;
+}
