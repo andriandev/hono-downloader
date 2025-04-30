@@ -7,7 +7,7 @@ import { YoutubeValidation } from '@app/validation/youtube';
 import {
   resJSON,
   getYouTubeID,
-  checkVideo,
+  checkYouTubeVideo,
   formatSize,
 } from '@app/helpers/function';
 import type {
@@ -32,7 +32,7 @@ export async function InfoVideo(c: Context) {
 
   const request: InfoTypes = YoutubeValidation.INFO.parse(query);
 
-  const isAvailable = await checkVideo(request?.url);
+  const isAvailable = await checkYouTubeVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -96,7 +96,7 @@ export async function DownloadVideo(c: Context) {
   const query = c.req.query();
   const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkVideo(request?.url);
+  const isAvailable = await checkYouTubeVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -185,7 +185,7 @@ export async function DownloadAudio(c: Context) {
   const query = c.req.query();
   const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkVideo(request?.url);
+  const isAvailable = await checkYouTubeVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -272,7 +272,7 @@ export async function DownloadVideoQueue(c: Context) {
   const query = c.req.query();
   const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkVideo(request?.url);
+  const isAvailable = await checkYouTubeVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -328,7 +328,7 @@ export async function DownloadAudioQueue(c: Context) {
   const query = c.req.query();
   const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkVideo(request?.url);
+  const isAvailable = await checkYouTubeVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {

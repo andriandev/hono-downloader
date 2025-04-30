@@ -31,7 +31,7 @@ export function getYouTubeID(url: string) {
   return match ? match[1] : null;
 }
 
-export async function checkVideo(url: string) {
+export async function checkYouTubeVideo(url: string) {
   try {
     const api = `https://www.youtube.com/oembed?url=${encodeURIComponent(
       url
