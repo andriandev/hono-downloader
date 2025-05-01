@@ -1,18 +1,26 @@
 import fs from 'fs';
 import path from 'path';
 import { cache } from '@app/config/cache';
-import { AUDIO_DIR, VIDEO_DIR } from '@app/config/setting';
+import {
+  AUDIO_DIR,
+  VIDEO_DIR,
+  YTDLP_PATH,
+  FFMPEG_PATH,
+} from '@app/config/setting';
 import { logger } from '@app/config/logging';
-import { APP_NODE, YTDLP_PATH, FFMPEG_PATH } from '@app/config/setting';
+import { getLatestCookiePath } from '@helpers/function';
 
 export function startQueue() {
   function processVideoQueue() {
-    APP_NODE !== 'production' ? logger.info('Queue video running...') : '';
+    logger.info('Queue video running...');
+
     const keys = cache.keys();
+    const filtered = keys.filter(
+      (k) => k.endsWith('.mp4') || k.endsWith('.mkv')
+    );
+    const firstThree = filtered.slice(0, 3);
 
-    for (const key of keys) {
-      if (!key.endsWith('.mp4') && !key.endsWith('.mkv')) continue;
-
+    for (const key of firstThree) {
       const filepath = path.join(VIDEO_DIR, key);
 
       if (fs.existsSync(filepath)) {
@@ -22,26 +30,42 @@ export function startQueue() {
 
       const data: Record<string, string> = cache.get(key);
 
-      const formatMap = {
-        '1080p': 'bestvideo[height<=1080]+bestaudio',
-        '720p': 'bestvideo[height<=720]+bestaudio',
-        '480p': 'bestvideo[height<=480]+bestaudio',
-        '360p': 'bestvideo[height<=360]+bestaudio',
-      };
-      const selectedFormat = formatMap[data.quality];
+      const cookiePath = getLatestCookiePath(data.site);
 
-      const args = [
-        YTDLP_PATH,
-        '-f',
-        selectedFormat,
-        '--merge-output-format',
-        data.format,
-        '--ffmpeg-location',
-        FFMPEG_PATH,
-        '-o',
-        filepath,
-        data.url,
-      ];
+      let args: any;
+
+      if (data.site == 'youtube') {
+        const formatMap = {
+          '1080p': 'bestvideo[height<=1080]+bestaudio',
+          '720p': 'bestvideo[height<=720]+bestaudio',
+          '480p': 'bestvideo[height<=480]+bestaudio',
+          '360p': 'bestvideo[height<=360]+bestaudio',
+        };
+
+        args = [
+          YTDLP_PATH,
+          '-f',
+          formatMap[data.quality],
+          '--merge-output-format',
+          data.format,
+          '--ffmpeg-location',
+          FFMPEG_PATH,
+        ];
+      } else if (data.site == 'tiktok') {
+        args = [
+          YTDLP_PATH,
+          '--merge-output-format',
+          data.format,
+          '--ffmpeg-location',
+          FFMPEG_PATH,
+        ];
+      }
+
+      if (cookiePath) {
+        args.push('--cookies', cookiePath);
+      }
+
+      args.push('-o', filepath, data.url);
 
       const proc = Bun.spawn(args, {
         stdout: 'pipe',
@@ -63,18 +87,19 @@ export function startQueue() {
   }
 
   function processAudioQueue() {
-    APP_NODE !== 'production' ? logger.info('Queue audio running...') : '';
+    logger.info('Queue audio running...');
+
     const keys = cache.keys();
+    const filtered = keys.filter(
+      (k) =>
+        k.endsWith('.mp3') ||
+        k.endsWith('.m4a') ||
+        k.endsWith('.flac') ||
+        k.endsWith('.opus')
+    );
+    const firstThree = filtered.slice(0, 3);
 
-    for (const key of keys) {
-      if (
-        !key.endsWith('.mp3') &&
-        !key.endsWith('.m4a') &&
-        !key.endsWith('.flac') &&
-        !key.endsWith('.opus')
-      )
-        continue;
-
+    for (const key of firstThree) {
       const filepath = path.join(AUDIO_DIR, key);
 
       if (fs.existsSync(filepath)) {
@@ -84,19 +109,40 @@ export function startQueue() {
 
       const data: Record<string, string> = cache.get(key);
 
-      const args = [
-        YTDLP_PATH,
-        '-x',
-        '--audio-quality',
-        data.quality,
-        '--audio-format',
-        data.format,
-        '--ffmpeg-location',
-        FFMPEG_PATH,
-        '-o',
-        filepath,
-        data.url,
-      ];
+      const cookiePath = getLatestCookiePath(data.site);
+
+      let args: any;
+
+      if (data.site == 'youtube') {
+        args = [
+          YTDLP_PATH,
+          '-x',
+          '--audio-quality',
+          data.quality,
+          '--audio-format',
+          data.format,
+          '--ffmpeg-location',
+          FFMPEG_PATH,
+        ];
+      } else if (data.site == 'tiktok') {
+        args = [
+          YTDLP_PATH,
+          '-x',
+          '--no-playlist',
+          '--audio-quality',
+          data.quality,
+          '--audio-format',
+          data.format,
+          '--ffmpeg-location',
+          FFMPEG_PATH,
+        ];
+      }
+
+      if (cookiePath) {
+        args.push('--cookies', cookiePath);
+      }
+
+      args.push('-o', filepath, data.url);
 
       const proc = Bun.spawn(args, {
         stdout: 'pipe',

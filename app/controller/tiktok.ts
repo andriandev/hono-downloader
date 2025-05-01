@@ -3,11 +3,11 @@ import { HTTPException } from 'hono/http-exception';
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { YoutubeValidation } from '@app/validation/youtube';
+import { TiktokValidation } from '@app/validation/tiktok';
 import {
   resJSON,
-  getYouTubeID,
-  checkYouTubeVideo,
+  checkTikTokVideo,
+  getTikTokID,
   formatSize,
   getLatestCookiePath,
 } from '@app/helpers/function';
@@ -26,88 +26,33 @@ import {
 import { cache } from '@app/config/cache';
 import { logger } from '@app/config/logging';
 
-export async function InfoVideoYouTube(c: Context) {
+export async function InfoVideoTikTok(c: Context) {
   const query: InfoTypes = {
     url: c.req.query('url'),
   };
 
-  const request: InfoTypes = YoutubeValidation.INFO.parse(query);
+  const request: InfoTypes = TiktokValidation.INFO.parse(query);
 
-  const isAvailable = await checkYouTubeVideo(request?.url);
+  const data = await checkTikTokVideo(request?.url);
 
-  if (!isAvailable) {
+  if (!data) {
     throw new HTTPException(400, {
       message: 'Video not available',
     });
   }
 
-  const cookiePath = getLatestCookiePath('youtube');
-
-  let args = [YTDLP_PATH, '--dump-json'];
-
-  if (cookiePath) {
-    args.push('--cookies', cookiePath);
-  }
-
-  args.push(request.url);
-
-  const proc = Bun.spawnSync(args, {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-
-  if (proc.exitCode !== 0) {
-    throw new HTTPException(400, {
-      message: new TextDecoder().decode(proc.stderr),
-    });
-  }
-
-  const output = new TextDecoder().decode(proc.stdout);
-  const data = JSON.parse(output);
-  const formats = data.formats || [];
-
-  const audioFormats = formats
-    .filter((f: any) => f.vcodec === 'none' && f.acodec !== 'none' && f.url)
-    .map((f: any) => ({
-      format_id: f.format_id,
-      ext: f.ext,
-      acodec: f.acodec,
-      abr: f.abr,
-      filesize: f.filesize,
-      url: f.url,
-    }));
-
-  const videoFormats = formats
-    .filter((f: any) => f.vcodec !== 'none' && f.url)
-    .map((f: any) => ({
-      format_id: f.format_id,
-      ext: f.ext,
-      resolution: `${f.height}p`,
-      fps: f.fps,
-      vcodec: f.vcodec,
-      acodec: f.acodec,
-      filesize: f.filesize,
-      url: f.url,
-    }));
-
   const resData = resJSON({
-    data: {
-      title: data.title,
-      duration: data.duration,
-      thumbnail: data.thumbnail,
-      audio: audioFormats,
-      video: videoFormats,
-    },
+    data: data,
   });
 
   return c.json(resData, resData.status as 200);
 }
 
-export async function DownloadVideoYouTube(c: Context) {
+export async function DownloadVideoTikTok(c: Context) {
   const query = c.req.query();
-  const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
+  const request: VideoTypes = TiktokValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkYouTubeVideo(request?.url);
+  const isAvailable = await checkTikTokVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -117,20 +62,11 @@ export async function DownloadVideoYouTube(c: Context) {
 
   if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
 
-  const { url, quality, format } = request;
+  const { url, format } = request;
 
-  const formatMap: Record<string, string> = {
-    '1080p': 'bestvideo[height<=1080]+bestaudio',
-    '720p': 'bestvideo[height<=720]+bestaudio',
-    '480p': 'bestvideo[height<=480]+bestaudio',
-    '360p': 'bestvideo[height<=360]+bestaudio',
-  };
-
-  const selectedFormat = formatMap[quality];
-
-  const ytID = getYouTubeID(url) || url;
+  const ttID = getTikTokID(url) || url;
   const hash = createHash('md5')
-    .update(`yt-video-${ytID}-${quality}-${format}`)
+    .update(`tt-video-${ttID}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
@@ -141,7 +77,6 @@ export async function DownloadVideoYouTube(c: Context) {
     const resData = resJSON({
       data: {
         size: formatSize(size),
-        quality,
         format,
         link: `${STORAGE_URL}/video/${filename}`,
       },
@@ -150,12 +85,10 @@ export async function DownloadVideoYouTube(c: Context) {
     return c.json(resData, resData.status as 200);
   }
 
-  const cookiePath = getLatestCookiePath('youtube');
+  const cookiePath = getLatestCookiePath('tiktok');
 
   const args = [
     YTDLP_PATH,
-    '-f',
-    selectedFormat,
     '--merge-output-format',
     format,
     '--ffmpeg-location',
@@ -188,7 +121,6 @@ export async function DownloadVideoYouTube(c: Context) {
   const resData = resJSON({
     data: {
       size: formatSize(size),
-      quality,
       format,
       link: `${STORAGE_URL}/video/${filename}`,
     },
@@ -197,11 +129,11 @@ export async function DownloadVideoYouTube(c: Context) {
   return c.json(resData, resData.status as 200);
 }
 
-export async function DownloadAudioYouTube(c: Context) {
+export async function DownloadAudioTikTok(c: Context) {
   const query = c.req.query();
-  const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
+  const request: AudioTypes = TiktokValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkYouTubeVideo(request?.url);
+  const isAvailable = await checkTikTokVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -213,9 +145,9 @@ export async function DownloadAudioYouTube(c: Context) {
 
   const { url, quality, format } = request;
 
-  const ytID = getYouTubeID(url) || url;
+  const ttID = getTikTokID(url) || url;
   const hash = createHash('md5')
-    .update(`yt-audio-${ytID}-${quality}-${format}`)
+    .update(`tt-audio-${ttID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -241,11 +173,12 @@ export async function DownloadAudioYouTube(c: Context) {
     return c.json(resData, resData.status as 200);
   }
 
-  const cookiePath = getLatestCookiePath('youtube');
+  const cookiePath = getLatestCookiePath('tiktok');
 
   const args = [
     YTDLP_PATH,
     '-x',
+    '--no-playlist',
     '--audio-quality',
     quality,
     '--audio-format',
@@ -289,11 +222,11 @@ export async function DownloadAudioYouTube(c: Context) {
   return c.json(resData, resData.status as 200);
 }
 
-export async function DownloadVideoQueueYouTube(c: Context) {
+export async function DownloadVideoQueueTikTok(c: Context) {
   const query = c.req.query();
-  const request: VideoTypes = YoutubeValidation.VIDEO.parse(query);
+  const request: VideoTypes = TiktokValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkYouTubeVideo(request?.url);
+  const isAvailable = await checkTikTokVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -301,11 +234,11 @@ export async function DownloadVideoQueueYouTube(c: Context) {
     });
   }
 
-  const { url, quality, format } = request;
+  const { url, format } = request;
 
-  const ytID = getYouTubeID(url) || url;
+  const ttID = getTikTokID(url) || url;
   const hash = createHash('md5')
-    .update(`yt-video-${ytID}-${quality}-${format}`)
+    .update(`tt-video-${ttID}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
@@ -316,7 +249,6 @@ export async function DownloadVideoQueueYouTube(c: Context) {
     const resData = resJSON({
       data: {
         size: formatSize(size),
-        quality,
         format,
         link: `${STORAGE_URL}/video/${filename}`,
       },
@@ -330,9 +262,8 @@ export async function DownloadVideoQueueYouTube(c: Context) {
       filename,
       {
         url,
-        quality,
         format,
-        site: 'youtube',
+        site: 'tiktok',
       },
       7200
     ); // 2 hours
@@ -346,11 +277,11 @@ export async function DownloadVideoQueueYouTube(c: Context) {
   return c.json(resData, resData.status as 202);
 }
 
-export async function DownloadAudioQueueYouTube(c: Context) {
+export async function DownloadAudioQueueTikTok(c: Context) {
   const query = c.req.query();
-  const request: AudioTypes = YoutubeValidation.AUDIO.parse(query);
+  const request: AudioTypes = TiktokValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkYouTubeVideo(request?.url);
+  const isAvailable = await checkTikTokVideo(request?.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -362,9 +293,9 @@ export async function DownloadAudioQueueYouTube(c: Context) {
 
   const { url, quality, format } = request;
 
-  const ytID = getYouTubeID(url) || url;
+  const ttID = getTikTokID(url) || url;
   const hash = createHash('md5')
-    .update(`yt-audio-${ytID}-${quality}-${format}`)
+    .update(`tt-audio-${ttID}-${quality}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -397,7 +328,7 @@ export async function DownloadAudioQueueYouTube(c: Context) {
         url,
         quality,
         format,
-        site: 'youtube',
+        site: 'tiktok',
       },
       7200
     ); // 2 hours
