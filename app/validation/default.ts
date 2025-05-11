@@ -1,23 +1,24 @@
 import { z } from 'zod';
 
-const urlTiktok = z
+const urlDefault = z
   .string({
     required_error: 'Missing url query',
   })
   .url('URL is not valid')
   .refine(
     (val) =>
-      val.includes('://www.tiktok.com/') || val.includes('://m.tiktok.com/'),
-    { message: 'Only TikTok URLs are allowed' }
+      val.includes('://www.tiktok.com/') ||
+      val.includes('://m.tiktok.com/') ||
+      val.includes('://www.instagram.com/') ||
+      val.includes('://instagram.com/') ||
+      val.includes('://www.facebook.com/') ||
+      val.includes('://m.facebook.com/'),
+    { message: 'Only TikTok, Facebook and InstaGram URLs are allowed' }
   );
 
-export class TiktokValidation {
-  static INFO = z.object({
-    url: urlTiktok,
-  });
-
+export class DefaultValidation {
   static AUDIO = z.object({
-    url: urlTiktok,
+    url: urlDefault,
     quality: z
       .enum(['0', '5', '9'], {
         errorMap: () => ({
@@ -35,7 +36,7 @@ export class TiktokValidation {
   });
 
   static VIDEO = z.object({
-    url: urlTiktok,
+    url: urlDefault,
     format: z
       .enum(['mp4', 'mkv'], {
         errorMap: () => ({
@@ -46,6 +47,5 @@ export class TiktokValidation {
   });
 }
 
-export type InfoTypes = z.infer<typeof TiktokValidation.INFO>;
-export type AudioTypes = z.infer<typeof TiktokValidation.AUDIO>;
-export type VideoTypes = z.infer<typeof TiktokValidation.VIDEO>;
+export type AudioTypes = z.infer<typeof DefaultValidation.AUDIO>;
+export type VideoTypes = z.infer<typeof DefaultValidation.VIDEO>;

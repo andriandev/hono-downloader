@@ -51,7 +51,7 @@ export function startQueue() {
           '--ffmpeg-location',
           FFMPEG_PATH,
         ];
-      } else if (data.site == 'tiktok') {
+      } else {
         args = [
           YTDLP_PATH,
           '--merge-output-format',
@@ -124,7 +124,7 @@ export function startQueue() {
           '--ffmpeg-location',
           FFMPEG_PATH,
         ];
-      } else if (data.site == 'tiktok') {
+      } else {
         args = [
           YTDLP_PATH,
           '-x',

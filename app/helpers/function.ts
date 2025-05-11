@@ -81,6 +81,92 @@ export async function checkTikTokVideo(url: string) {
   }
 }
 
+export function getInstaGramID(url: string): string | null {
+  const match = url.match(/instagram\.com\/(?:reel|p|tv)\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+export async function checkInstaGramVideo(url: string) {
+  return true;
+}
+
+export function getFaceBookID(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const pathname = parsed.pathname;
+
+    // Format: /watch/?v=123456
+    if (parsed.searchParams.has('v')) {
+      return parsed.searchParams.get('v');
+    }
+
+    // Format: /username/videos/123456/
+    const matchVideos = pathname.match(/\/videos\/(\d+)/);
+    if (matchVideos) return matchVideos[1];
+
+    // Format: /story.php?story_fbid=123456&id=7890
+    if (
+      parsed.pathname === '/story.php' &&
+      parsed.searchParams.has('story_fbid')
+    ) {
+      return parsed.searchParams.get('story_fbid');
+    }
+
+    // Format: /watch/<shortcode>/
+    const matchWatch = pathname.match(/^\/watch\/([a-zA-Z0-9_-]+)\/?$/);
+    if (matchWatch) return matchWatch[1];
+
+    // Format: /reel/<video_id>
+    const matchReel = pathname.match(/\/reel\/(\d+)/);
+    if (matchReel) return matchReel[1];
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function checkFaceBookVideo(url: string) {
+  return true;
+}
+
+export function getVideoID(url: string) {
+  const data = {
+    id: '',
+    alias: '',
+    site: '',
+  };
+
+  if (url.includes('tiktok.com')) {
+    data.id = getTikTokID(url);
+    data.alias = 'tt';
+    data.site = 'tiktok';
+  } else if (url.includes('instagram.com')) {
+    data.id = getInstaGramID(url);
+    data.alias = 'ig';
+    data.site = 'instagram';
+  } else if (url.includes('facebook.com')) {
+    data.id = getFaceBookID(url);
+    data.alias = 'fb';
+    data.site = 'facebook';
+  } else {
+    data.id = url;
+    data.site = 'unknown';
+  }
+
+  return data;
+}
+
+export async function checkVideo(url: string) {
+  if (url.includes('tiktok.com')) {
+    return await checkTikTokVideo(url);
+  } else if (url.includes('instagram.com')) {
+    return await checkInstaGramVideo(url);
+  } else {
+    return null;
+  }
+}
+
 export function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;

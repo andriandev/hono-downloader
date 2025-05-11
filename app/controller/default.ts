@@ -3,19 +3,15 @@ import { HTTPException } from 'hono/http-exception';
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { TiktokValidation } from '@app/validation/tiktok';
+import { DefaultValidation } from '@app/validation/default';
 import {
   resJSON,
-  checkTikTokVideo,
-  getTikTokID,
   formatSize,
   getLatestCookiePath,
+  getVideoID,
+  checkVideo,
 } from '@app/helpers/function';
-import type {
-  InfoTypes,
-  AudioTypes,
-  VideoTypes,
-} from '@app/validation/youtube';
+import type { AudioTypes, VideoTypes } from '@app/validation/youtube';
 import {
   AUDIO_DIR,
   VIDEO_DIR,
@@ -26,33 +22,11 @@ import {
 import { cache } from '@app/config/cache';
 import { logger } from '@app/config/logging';
 
-export async function InfoVideoTikTok(c: Context) {
-  const query: InfoTypes = {
-    url: c.req.query('url'),
-  };
-
-  const request: InfoTypes = TiktokValidation.INFO.parse(query);
-
-  const data = await checkTikTokVideo(request?.url);
-
-  if (!data) {
-    throw new HTTPException(400, {
-      message: 'Video not available',
-    });
-  }
-
-  const resData = resJSON({
-    data: data,
-  });
-
-  return c.json(resData, resData.status as 200);
-}
-
-export async function DownloadVideoTikTok(c: Context) {
+export async function DownloadVideoDefault(c: Context) {
   const query = c.req.query();
-  const request: VideoTypes = TiktokValidation.VIDEO.parse(query);
+  const request: VideoTypes = DefaultValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkTikTokVideo(request?.url);
+  const isAvailable = await checkVideo(request.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -64,9 +38,9 @@ export async function DownloadVideoTikTok(c: Context) {
 
   const { url, format } = request;
 
-  const ttID = getTikTokID(url) || url;
+  const videoID = getVideoID(url);
   const hash = createHash('md5')
-    .update(`tt-video-${ttID}-${format}`)
+    .update(`${videoID.alias}-video-${videoID.id}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
@@ -85,7 +59,7 @@ export async function DownloadVideoTikTok(c: Context) {
     return c.json(resData, resData.status as 200);
   }
 
-  const cookiePath = getLatestCookiePath('tiktok');
+  const cookiePath = getLatestCookiePath(videoID.site);
 
   const args = [
     YTDLP_PATH,
@@ -129,11 +103,11 @@ export async function DownloadVideoTikTok(c: Context) {
   return c.json(resData, resData.status as 200);
 }
 
-export async function DownloadAudioTikTok(c: Context) {
+export async function DownloadAudioDefault(c: Context) {
   const query = c.req.query();
-  const request: AudioTypes = TiktokValidation.AUDIO.parse(query);
+  const request: AudioTypes = DefaultValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkTikTokVideo(request?.url);
+  const isAvailable = await checkVideo(request.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -145,9 +119,9 @@ export async function DownloadAudioTikTok(c: Context) {
 
   const { url, quality, format } = request;
 
-  const ttID = getTikTokID(url) || url;
+  const videoID = getVideoID(url);
   const hash = createHash('md5')
-    .update(`tt-audio-${ttID}-${quality}-${format}`)
+    .update(`${videoID.alias}-audio-${videoID.id}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -173,7 +147,7 @@ export async function DownloadAudioTikTok(c: Context) {
     return c.json(resData, resData.status as 200);
   }
 
-  const cookiePath = getLatestCookiePath('tiktok');
+  const cookiePath = getLatestCookiePath(videoID.site);
 
   const args = [
     YTDLP_PATH,
@@ -222,11 +196,11 @@ export async function DownloadAudioTikTok(c: Context) {
   return c.json(resData, resData.status as 200);
 }
 
-export async function DownloadVideoQueueTikTok(c: Context) {
+export async function DownloadVideoQueueDefault(c: Context) {
   const query = c.req.query();
-  const request: VideoTypes = TiktokValidation.VIDEO.parse(query);
+  const request: VideoTypes = DefaultValidation.VIDEO.parse(query);
 
-  const isAvailable = await checkTikTokVideo(request?.url);
+  const isAvailable = await checkVideo(request.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -236,9 +210,9 @@ export async function DownloadVideoQueueTikTok(c: Context) {
 
   const { url, format } = request;
 
-  const ttID = getTikTokID(url) || url;
+  const videoID = getVideoID(url);
   const hash = createHash('md5')
-    .update(`tt-video-${ttID}-${format}`)
+    .update(`${videoID.alias}-video-${videoID.id}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(VIDEO_DIR, filename);
@@ -263,7 +237,7 @@ export async function DownloadVideoQueueTikTok(c: Context) {
       {
         url,
         format,
-        site: 'tiktok',
+        site: videoID.site,
       },
       7200
     ); // 2 hours
@@ -277,11 +251,11 @@ export async function DownloadVideoQueueTikTok(c: Context) {
   return c.json(resData, resData.status as 202);
 }
 
-export async function DownloadAudioQueueTikTok(c: Context) {
+export async function DownloadAudioQueueDefault(c: Context) {
   const query = c.req.query();
-  const request: AudioTypes = TiktokValidation.AUDIO.parse(query);
+  const request: AudioTypes = DefaultValidation.AUDIO.parse(query);
 
-  const isAvailable = await checkTikTokVideo(request?.url);
+  const isAvailable = await checkVideo(request.url);
 
   if (!isAvailable) {
     throw new HTTPException(400, {
@@ -293,9 +267,9 @@ export async function DownloadAudioQueueTikTok(c: Context) {
 
   const { url, quality, format } = request;
 
-  const ttID = getTikTokID(url) || url;
+  const videoID = getVideoID(url);
   const hash = createHash('md5')
-    .update(`tt-audio-${ttID}-${quality}-${format}`)
+    .update(`${videoID.alias}-audio-${videoID.id}-${format}`)
     .digest('hex');
   const filename = `${hash}.${format}`;
   const filepath = path.join(AUDIO_DIR, filename);
@@ -328,7 +302,7 @@ export async function DownloadAudioQueueTikTok(c: Context) {
         url,
         quality,
         format,
-        site: 'tiktok',
+        site: videoID.site,
       },
       7200
     ); // 2 hours

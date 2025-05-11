@@ -8,12 +8,11 @@ import {
   DownloadAudioQueueYouTube,
 } from '@app/controller/youtube';
 import {
-  InfoVideoTikTok,
-  DownloadVideoTikTok,
-  DownloadAudioTikTok,
-  DownloadVideoQueueTikTok,
-  DownloadAudioQueueTikTok,
-} from '@app/controller/tiktok';
+  DownloadVideoDefault,
+  DownloadAudioDefault,
+  DownloadVideoQueueDefault,
+  DownloadAudioQueueDefault,
+} from '@app/controller/default';
 import { UploadCookies, ClearCookies } from '@app/controller/cookies';
 import { FlushCache } from '@app/controller/cache';
 
@@ -34,11 +33,10 @@ app.get('/yt/audio', DownloadAudioYouTube);
 app.get('/yt/video-queue', DownloadVideoQueueYouTube);
 app.get('/yt/audio-queue', DownloadAudioQueueYouTube);
 
-app.get('/tt/info', InfoVideoTikTok);
-app.get('/tt/video', DownloadVideoTikTok);
-app.get('/tt/audio', DownloadAudioTikTok);
-app.get('/tt/video-queue', DownloadVideoQueueTikTok);
-app.get('/tt/audio-queue', DownloadAudioQueueTikTok);
+app.get('/video', DownloadVideoDefault);
+app.get('/audio', DownloadAudioDefault);
+app.get('/video-queue', DownloadVideoQueueDefault);
+app.get('/audio-queue', DownloadAudioQueueDefault);
 
 app.post('/cookies', UploadCookies);
 app.delete('/cookies', ClearCookies);

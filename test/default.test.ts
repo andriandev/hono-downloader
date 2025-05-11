@@ -3,41 +3,9 @@ import { app } from '../index';
 
 const TT_URL = 'https://www.tiktok.com/@ms92000/video/7494996321254903095';
 
-describe('GET /tt/info', () => {
-  it('should return video info for valid TikTok URL', async () => {
-    const res = await app.request(`/tt/info?url=${TT_URL}`);
-
-    const data = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(data.data.title).toBeDefined();
-    expect(data.data.thumbnail_url).toContain('http');
-  });
-
-  it('should fail if TikTok video is not available', async () => {
-    const res = await app.request(
-      '/tt/info?url=https://www.tiktok.com/@ms92000/video/not-exist'
-    );
-
-    const data = await res.json();
-
-    expect(res.status).toBe(400);
-    expect(data.message).toBe('Video not available');
-  });
-
-  it('should return 400 for invalid TikTok URL', async () => {
-    const res = await app.request('/tt/info?url=https://google.com');
-
-    const data = await res.json();
-
-    expect(res.status).toBe(400);
-    expect(data.message?.url).toBe('Only TikTok URLs are allowed');
-  });
-});
-
-describe('GET /tt/video', () => {
+describe('GET /video', () => {
   it('should return download link and data for valid TikTok URL and format', async () => {
-    const res = await app.request(`/tt/video?url=${TT_URL}&format=mp4`);
+    const res = await app.request(`/video?url=${TT_URL}&format=mp4`);
 
     const data = await res.json();
 
@@ -48,7 +16,7 @@ describe('GET /tt/video', () => {
 
   it('should fail if TikTok video is not available', async () => {
     const res = await app.request(
-      '/tt/video?url=https://www.tiktok.com/@ms92000/video/not-exist'
+      '/video?url=https://www.tiktok.com/@ms92000/video/not-exist'
     );
 
     const data = await res.json();
@@ -58,7 +26,7 @@ describe('GET /tt/video', () => {
   });
 
   it('should return 400 for invalid format', async () => {
-    const res = await app.request(`/tt/video?url=${TT_URL}&format=exe`);
+    const res = await app.request(`/video?url=${TT_URL}&format=exe`);
 
     const data = await res.json();
 
@@ -67,22 +35,20 @@ describe('GET /tt/video', () => {
   });
 
   it('should return 400 for invalid TikTok URL', async () => {
-    const res = await app.request(
-      '/tt/video?url=https://example.com&format=mp4'
-    );
+    const res = await app.request('/video?url=https://example.com&format=mp4');
 
     const data = await res.json();
 
     expect(res.status).toBe(400);
-    expect(data.message?.url).toBe('Only TikTok URLs are allowed');
+    expect(data.message?.url).toBe(
+      'Only TikTok, Facebook and InstaGram URLs are allowed'
+    );
   });
 });
 
-describe('GET /tt/audio', () => {
+describe('GET /audio', () => {
   it('should return audio download link and data for valid TikTok URL and format', async () => {
-    const res = await app.request(
-      `/tt/audio?url=${TT_URL}&quality=5&format=mp3`
-    );
+    const res = await app.request(`/audio?url=${TT_URL}&quality=5&format=mp3`);
 
     const data = await res.json();
 
@@ -93,7 +59,7 @@ describe('GET /tt/audio', () => {
 
   it('should fail if TikTok video is not available', async () => {
     const res = await app.request(
-      '/tt/audio?url=https://www.tiktok.com/@ms92000/video/not-exist'
+      '/audio?url=https://www.tiktok.com/@ms92000/video/not-exist'
     );
 
     const data = await res.json();
@@ -103,9 +69,7 @@ describe('GET /tt/audio', () => {
   });
 
   it('should return 400 for invalid format', async () => {
-    const res = await app.request(
-      `/tt/audio?url=${TT_URL}&quality=0&format=exe`
-    );
+    const res = await app.request(`/audio?url=${TT_URL}&quality=0&format=exe`);
 
     const data = await res.json();
 
@@ -117,19 +81,21 @@ describe('GET /tt/audio', () => {
 
   it('should return 400 for invalid TikTok URL', async () => {
     const res = await app.request(
-      '/tt/audio?url=https://example.com&quality=0&format=mp3'
+      '/audio?url=https://example.com&quality=0&format=mp3'
     );
 
     const data = await res.json();
 
     expect(res.status).toBe(400);
-    expect(data.message?.url).toBe('Only TikTok URLs are allowed');
+    expect(data.message?.url).toBe(
+      'Only TikTok, Facebook and InstaGram URLs are allowed'
+    );
   });
 });
 
-describe('GET /tt/video-queue', () => {
+describe('GET /video-queue', () => {
   it('should return 200 and video link if file already exists', async () => {
-    const res = await app.request(`/tt/video-queue?url=${TT_URL}&format=mp4`);
+    const res = await app.request(`/video-queue?url=${TT_URL}&format=mp4`);
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -140,7 +106,7 @@ describe('GET /tt/video-queue', () => {
 
   it('should fail if TikTok video is not available', async () => {
     const res = await app.request(
-      '/tt/video-queue?url=https://www.tiktok.com/@ms92000/video/not-exist'
+      '/video-queue?url=https://www.tiktok.com/@ms92000/video/not-exist'
     );
 
     const data = await res.json();
@@ -152,7 +118,7 @@ describe('GET /tt/video-queue', () => {
   it('should return 202 and enqueue video if not exists', async () => {
     const dummyUrl =
       'https://www.tiktok.com/@ms92000/video/7493453729094536453';
-    const res = await app.request(`/tt/video-queue?url=${dummyUrl}&format=mp4`);
+    const res = await app.request(`/video-queue?url=${dummyUrl}&format=mp4`);
 
     const data = await res.json();
 
@@ -163,10 +129,10 @@ describe('GET /tt/video-queue', () => {
   });
 });
 
-describe('GET /tt/audio-queue', () => {
+describe('GET /audio-queue', () => {
   it('should return 200 and audio link if file already exists', async () => {
     const res = await app.request(
-      `/tt/audio-queue?url=${TT_URL}&quality=5&format=mp3`
+      `/audio-queue?url=${TT_URL}&quality=5&format=mp3`
     );
     const data = await res.json();
 
@@ -179,7 +145,7 @@ describe('GET /tt/audio-queue', () => {
 
   it('should fail if TikTok video is not available', async () => {
     const res = await app.request(
-      '/tt/audio-queue?url=https://www.tiktok.com/@ms92000/video/not-exist'
+      '/audio-queue?url=https://www.tiktok.com/@ms92000/video/not-exist'
     );
 
     const data = await res.json();
@@ -192,7 +158,7 @@ describe('GET /tt/audio-queue', () => {
     const dummyUrl =
       'https://www.tiktok.com/@ms92000/video/7493453729094536453';
     const res = await app.request(
-      `/tt/audio-queue?url=${dummyUrl}&quality=9&format=mp3`
+      `/audio-queue?url=${dummyUrl}&quality=9&format=mp3`
     );
     const data = await res.json();
 
